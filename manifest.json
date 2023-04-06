@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "github filetree",
+  "description": "Filetree for repos on github.com",
+  "version": "1.0",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Github Filetree"
+  },
+  "content_scripts": [
+    {
+      "css": ["styles.css"],
+      "js": ["content.js"],
+      "matches": ["https://github.com/*"]
+    }
+  ],
+  "web_accessible_resources": [{
+    "matches": ["<all_urls>"],
+    "resources": ["morphdom.esm.js", "dompurify.js", "filetree.js"]
+  }]
+}

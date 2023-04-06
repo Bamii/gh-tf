@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+}
+
+body {
+  position: relative;
+}
+
+#menu-container {
+  position: fixed;
+  left: 2rem;
+  bottom: 2rem;
+  z-index: 100;
+}
+
+#menu-container.hidden {
+  display: none;
+}
+
+.menu {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+}
+
+#hamburger {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+#hamburger.loading {
+  transition: all 2s ease-in-out;
+  animation: pulser 2s infinite alternate;
+}
+
+@keyframes pulser {
+  from {
+    rotate: 0deg;
+  }
+
+  to {
+    rotate: 360deg;
+  }
+}
+
+#list {
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  max-height: 30rem;
+  overflow-y: scroll;
+  border-radius: 8px;
+  border: 2px solid black;
+  width: 20rem;
+}
+
+#list.hidden {
+  display: none;
+}
+
+#list .folder,
+#list .gh-file {
+  cursor: pointer;
+}
+
+#list .folder-children {
+  margin-left: 1rem;
+}
+
+#list .folder-children.hidden {
+  display: none;
+}
+
+.folder-children .gh-file::before,
+.folder-children .folder::before {
+  content: "∟";
+  margin-right: 1rem;
+}
+
+.folder-children .gh-file,
+.folder-children .folder {
+  padding-left: 1rem;
+}
+
+#menu.hidden {
+  display: none;
+}
