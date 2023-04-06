@@ -141,9 +141,10 @@ export class FileTree {
     }
   }
 
-  async load_new_page(url) {
+  async load_new_page(_url) {
     try {
-      this.load_page(url, true);
+      const url = new URL(_url);
+      this.load_page(url.pathname, true);
     } catch (error) {
       throw new Error(error);
     }
@@ -178,7 +179,7 @@ export class FileTree {
         } else {
           let cache = this.#repository.get(label);
 
-          if(is_cache_valid(cache)) 
+          if(is_cache_valid(cache))
             list = cache.list;
           else
             list = await _fetch();
