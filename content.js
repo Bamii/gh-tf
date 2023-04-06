@@ -7,11 +7,11 @@
   }
 
   const me = await _import("./filetree.js")
-  me.default(document);
+  const Filetree = me.FileTree;
+  const filetree = new Filetree(document);
 
   chrome.runtime.onMessage.addListener((message) => {
-    me.load_new_page(message);
-    console.log(message, "yayyyyy")
+    filetree.load_new_page(message);
   })
 })()
 

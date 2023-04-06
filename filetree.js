@@ -73,92 +73,14 @@ class Repository {
   }
 
   set(key, list) {
-    // updatedAt for cache purposes
+    // updated_at for cache ttl purposes
     try {
-      this.#memory.set(key, { updatedAt: Date.now(), list });
+      this.#memory.set(key, { updated_at: Date.now(), list });
       this.setToLocalStorage()
     } catch (error) {
       console.log(error);
       throw new Error(error);
     }
-  }
-}
-
-const repository = new Repository();
-
-const fetch_tree_list = async (meta) => {
-  const { owner, repo, tree, branch } = meta;
-  const API = "https://6nhfujnue3.execute-api.us-east-1.amazonaws.com/";
-  const label = create_memory_label({ owner, repo, tree, branch });
-
-  const _fetch = async () => {
-    try {
-      const _data = await fetch(API, {
-        method: "post",
-        body: JSON.stringify({ owner, repo, branch }),
-      });
-      const { data } = await _data.json();
-      repository.set(label, data);
-      return data;
-    } catch (error) {
-      console.log(error)
-      throw new Error(error)
-    }
-  }
- 
-  if (tree === "tree" || tree === "blob") {
-    try {
-      let list;
-      // show_loading(true);
-      if (!repository.contains(label)) {
-        list = await _fetch();
-      } else {
-        let cache = repository.get(label);
-
-        if(is_cache_valid(cache)) 
-          list = cache.list;
-        else
-          list = await _fetch();
-      }
-
-      return list;
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  } else {
-    return null;
-  }
-}
-
-async function load_page(container, url, flag) {
-  try {
-    const meta = get_filtree_meta(url);
-    const list = await fetch_tree_list(meta);
-    await embellish(container, list, meta, flag)
-  } catch (error) {
-    console.log();
-  }
-}
-
-async function embellish(container, list, meta, flag) {
-  if(list)
-    container.innerHTML = menu_template(create_layout(list, meta));
-
-  if(!flag) {
-    container.querySelector("#hamburger").classList.remove("loading");
-    const hideMenu = () => {
-      container.querySelector("#list").classList.toggle("hidden");
-    };
-    container.querySelectorAll("[data-list]").forEach((trigger) => {
-      trigger.addEventListener("click", (e) => {
-        trigger.nextElementSibling.classList.toggle("hidden");
-      });
-    });
-    container.querySelector("#hamburger").addEventListener("click", hideMenu);
-    container.querySelectorAll(".file-link").forEach((trigger) => {
-      trigger.addEventListener("click", hideMenu);
-    });
   }
 }
 
@@ -183,37 +105,49 @@ const create_layout = (list, meta) => {
     .join(" ");
 };
 
-class FileTree {
+
+// exports
+export class FileTree {
   #root = null;
   #repository = null;
+  #document = null;
+  #token = null;
 
-  constructor() {
+  constructor(document) {
+    this.#document = document;
     this.#repository = new Repository();
     this.#init();
-    this.load_page(this.#root, window.location.pathname);
+    this.load_page(window.location.pathname);
   }
 
   #init() {
-    let bdiv = _document.getElementById("menu-container");
+    let bdiv = this.#document.getElementById("menu-container");
   
     if (!bdiv) {
-      bdiv = _document.createElement("div");
+      bdiv = this.#document.createElement("div");
       bdiv.setAttribute("id", "menu-container");
-      _document.querySelector("body").append(bdiv);
+      this.#document.querySelector("body").append(bdiv);
       this.#root = bdiv;
     }
   }
 
-  async load_page(container, url, flag) {
+  async load_page(url, flag) {
     try {
       const meta = get_filtree_meta(url);
-      const list = await fetch_tree_list(meta);
-      await embellish(container, list, meta, flag)
+      const list = await this.fetch_tree_list(meta);
+      await this.embellish(list, meta, flag)
     } catch (error) {
       console.log();
     }
   }
 
+  async load_new_page(url) {
+    try {
+      this.load_page(url, true);
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
   
   async fetch_tree_list (meta) {
     const { owner, repo, tree, branch } = meta;
@@ -227,7 +161,7 @@ class FileTree {
           body: JSON.stringify({ owner, repo, branch }),
         });
         const { data } = await _data.json();
-        repository.set(label, data);
+        this.#repository.set(label, data);
         return data;
       } catch (error) {
         console.log(error)
@@ -239,10 +173,10 @@ class FileTree {
       try {
         let list;
         // show_loading(true);
-        if (!repository.contains(label)) {
+        if (!this.#repository.contains(label)) {
           list = await _fetch();
         } else {
-          let cache = repository.get(label);
+          let cache = this.#repository.get(label);
 
           if(is_cache_valid(cache)) 
             list = cache.list;
@@ -259,32 +193,29 @@ class FileTree {
       return null;
     }
   }
-}
 
-// exports
-export async function load_new_page(url) {
-  try {
-    load_page(document.getElementById("menu-container"), url, true);
-  } catch (error) {
-    throw new Error(error);
-  }
-}
-
-export default async function (_document) {
-  try {
-    let bdiv = _document.getElementById("menu-container");
+  async embellish(list, meta, flag) {
+    if(list)
+      this.#root.innerHTML = menu_template(create_layout(list, meta));
   
-    if (!bdiv) {
-      bdiv = _document.createElement("div");
-      bdiv.setAttribute("id", "menu-container");
-      _document.querySelector("body").append(bdiv);
-      
-      load_page(bdiv, window.location.pathname);
+    if(!flag) {
+      this.#root.querySelector("#hamburger").classList.remove("loading");
+      const hideMenu = () => {
+        this.#root.querySelector("#list").classList.toggle("hidden");
+      };
+      this.#root.querySelectorAll("[data-list]").forEach((trigger) => {
+        trigger.addEventListener("click", (e) => {
+          trigger.nextElementSibling.classList.toggle("hidden");
+        });
+      });
+      this.#root.querySelector("#hamburger").addEventListener("click", hideMenu);
+      this.#root.querySelectorAll(".file-link").forEach((trigger) => {
+        trigger.addEventListener("click", hideMenu);
+      });
     }
-  } catch (error) {
-    throw new Error(error);
   }
 }
+
 
 // utils
 const get_filtree_meta = (pathname) => {
@@ -305,5 +236,5 @@ const get_hours_between_now_and_time = (time) => {
 }
 
 const is_cache_valid = (cache) => {
-  return cache?.updatedAt && get_hours_between_now_and_time(cache?.updatedAt) < CACHE_TTL;
+  return cache?.updated_at && get_hours_between_now_and_time(cache?.updated_at) < CACHE_TTL;
 }
