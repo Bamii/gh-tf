@@ -1,7 +1,7 @@
 
 function dos() {
   document
-    .getElementById("menu-container")
+    .getElementById("gh_ft_menu-container")
     .classList
     .toggle("hidden");
 }
@@ -37,7 +37,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, tab, info) => {
     if(tab.url) {
       await chrome.tabs.sendMessage(
         tabId,
-        tab.url,
+        `url ${tab.url}`,
         {},
         () => {},
       );
@@ -45,5 +45,21 @@ chrome.tabs.onUpdated.addListener(async (tabId, tab, info) => {
     console.log()
   } catch (error) {
     console.log(error)
+  }
+});
+
+chrome.runtime.onMessage.addListener(async (message) => {
+  const [operation, details] = message.split(" ");
+
+  switch (operation) {
+    case "code":
+      chrome.storage.sync.set("user-token", details);      
+      break;
+
+    case "get-code":
+      chrome.tabs.sendMessage(`code ${chrome.storage.sync.get("user-token")}`)
+  
+    default:
+      break;
   }
 });
